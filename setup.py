@@ -1,16 +1,16 @@
 from setuptools import setup, find_packages
 
-VERSION = '0.0.7'
+VERSION = '0.0.3'
 DESCRIPTION = 'Automatically mask sentences from a given input where certain words vary, and fil-mask from given candidates'
 
 # Setting up
 setup(
-    name="autoFillMaskWithCandi",
+    name="autoFillMaskWithCandy",
     version=VERSION,
     author="Elatot",
     author_email="<elashiishii@gmail.com>",
     license="MIT",
-    url="https://github.com/Elashico/autoFillMaskWithCandi.git",
+    url="https://github.com/Elashico/autoFillMaskWithCandy.git",
     description=DESCRIPTION,
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown', 
