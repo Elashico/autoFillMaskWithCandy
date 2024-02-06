@@ -118,7 +118,6 @@ def mask_fill_replaced(input_sentences):
 
     # Print the replaced sentence
     #print(f"{replaced_sentence}")
-
     return replaced_sentence
 
 '''
