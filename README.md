@@ -1,4 +1,4 @@
-# autoFillMaskWithCandidates
+# autoFillMaskWithCandy
 
 Under construction! Not ready for use yet! Currently experimenting and planning!
 
@@ -16,7 +16,7 @@ This Python package provides advanced text processing functionalities utilizing 
 - Show masked inputs and provide scores for candidate words.
 - Replace masked words with the most probable candidates.
 
-# Limitation
+# Limitations
 
 - May not be compatible with model using <mask> inference key like roBerta LLM
 
@@ -25,13 +25,13 @@ This Python package provides advanced text processing functionalities utilizing 
 
 ```bash
 pip install torch transformers
-pip install autoFillMaskWithCandi==0.0.7
+pip install autoFillMaskWithCandy==0.0.3
 ```
 
 # Examples of Usage
 
 ```python
-from autoFillMaskWithCandi import setTokenModel, show_mask_fill, mask_fill_replaced
+from autoFillMaskWithCandy import setTokenModel, show_mask_fill, mask_fill_replaced
 
 # Set the model for tokenizer
 model_name = "Your-Model-Name-Here"
