@@ -18,14 +18,14 @@ This Python package provides advanced text processing functionalities utilizing 
 
 # Limitations
 
-- May not be compatible with model using <mask> inference key like roBerta LLM
+- May not be compatible with model using <mask> inference key like roBerta LLM. This algorithm uses [CLS] and [SEP] which are compatible with Bert and electra.
 
 # Installation
 - To use this package, you need to have Python installed on your system, along with PyTorch and the Transformers library. If you haven't installed these dependencies yet, you can do so using pip:
 
 ```bash
 pip install torch transformers
-pip install autoFillMaskWithCandy==0.0.3
+pip install autoFillMaskWithCandy==0.0.4
 ```
 
 # Examples of Usage
@@ -39,8 +39,10 @@ setTokenModel(model_name)
 
 # Example sentences
 input_sentences = [
-    "maling hindi maligo",
-    "maling hindi malego"
+    "Pasensya heto lng ako, bobo sa pagaral",
+    "Pasensya hito lng ako, bobo sa pagaral",
+    "Pasensya heto lng ako, bubo sa pagaral",
+    "Pasensya hito lng ako, bubo sa pagaral"
 ]
 
 # Show masked input and scores for candidate words
