@@ -4,11 +4,9 @@ from transformers import AutoTokenizer, AutoModelForMaskedLM
 
 # function to set you model from hugging face as the model and tokenizer
 def setTokenModel(model_name):
-    global tokenizer, model, mask_token
+    global tokenizer, model
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForMaskedLM.from_pretrained(model_name)
-    mask_token = tokenizer.mask_token
-    #print(mask_token)
 
 # function to automatically mask differing words
 def mask_differing_words(input_sentences):
@@ -30,7 +28,7 @@ def mask_differing_words(input_sentences):
     for sentence_tokens in tokenized_sentences:
         masked_tokens = sentence_tokens.copy()
         for index, word in differing_words:
-            masked_tokens[index] = mask_token  # --> changes [MASK] to mask_token
+            masked_tokens[index] = "[MASK]"
         masked_inputs.append(" ".join(masked_tokens))
 
     # Create candidates list for each differing word
@@ -46,33 +44,31 @@ def mask_differing_words(input_sentences):
     return unique_masked_inputs, candidates_list
 
 # function to calculate the probability of a candidate
-def get_candidate_probability(candidate, mask_index, tokenized_text):
-    # Directly tokenize the candidate (expecting candidate to be a string)
-    candidate_tokens = tokenizer.tokenize(candidate)
+def get_candidate_probability(candidate_tokens, mask_index, tokenized_text):
+    # replace the masked token with the candidate tokens
+    tokenized_candidate = ["[CLS]"]
+    for i in range(len(tokenized_text)):
+        if i == mask_index:
+            tokenized_candidate += candidate_tokens
+        else:
+            tokenized_candidate.append(tokenized_text[i])
 
-    # Prepare the input with the candidate token(s) in place of the mask
-    tokenized_text_with_candidate = tokenized_text[:mask_index] + candidate_tokens + tokenized_text[mask_index+1:]
-    
-    # Convert the updated token list to IDs and proceed as before
-    input_ids = tokenizer.convert_tokens_to_ids(tokenized_text_with_candidate)
+    # convert tokenized sentence to input IDs
+    input_ids = tokenizer.convert_tokens_to_ids(tokenized_candidate)
+
+    # convert input IDs to tensors
     input_tensor = torch.tensor([input_ids])
 
-    # Get model predictions
+    # get the logits from the model
     with torch.no_grad():
-        outputs = model(input_tensor)
-        logits = outputs.logits
+        logits = model(input_tensor).logits[0]
 
-    # Focus on the logits for the masked position; this assumes mask_index is adjusted for tokenized input
-    mask_logits = logits[0, mask_index]
+    # calculate the probability of the candidate word
+    probs = softmax(logits, dim=-1)
+    probs = probs[range(len(input_ids)), input_ids]
+    prob = torch.prod(probs)
 
-    # Apply softmax to get probabilities
-    mask_probs = softmax(mask_logits, dim=0)
-
-    # Assuming candidate_tokens[0] is the main token for the candidate
-    candidate_id = tokenizer.convert_tokens_to_ids([candidate_tokens[0]])[0]
-    candidate_prob = mask_probs[candidate_id].item()
-
-    return candidate_prob
+    return prob.item()
 
 #funtion to show the masked input and provide the scores 
 def show_mask_fill(input_sentences):
@@ -80,17 +76,16 @@ def show_mask_fill(input_sentences):
 
     # tokenize the input sentence
     tokenized_text = tokenizer.tokenize(unique_masked_inputs[0])
-    mask_token_indices = [i for i, token in enumerate(tokenized_text) if token == mask_token] # --> changes [MASK] to mask_token
+    mask_token_indices = [i for i, token in enumerate(tokenized_text) if token == "[MASK]"]
 
     print(f"Masked Input: {unique_masked_inputs[0]}\n")
 
     # evaluating the probability of each candidate word for each mask
     for mask_index, candidates in zip(mask_token_indices, candidates_list):
         for candidate in candidates:
-            # Ensure candidate is a string; no need to tokenize here since it's done inside get_candidate_probability
-            candidate_probability = get_candidate_probability(candidate, mask_index, tokenized_text)
+            candidate_tokens = tokenizer.tokenize(candidate)
+            candidate_probability = get_candidate_probability(candidate_tokens, mask_index,tokenized_text)
             print(f"Mask {mask_index + 1}, {candidate:<20} {candidate_probability}")
-
 
 def mask_fill_replaced(input_sentences):
     unique_masked_inputs, candidates_list = mask_differing_words(input_sentences)
@@ -99,7 +94,7 @@ def mask_fill_replaced(input_sentences):
         # Tokenize the input sentence
         tokenized_text = tokenizer.tokenize(input_sentence)
         # Find indices of masked tokens
-        mask_token_indices = [i for i, token in enumerate(tokenized_text) if token == mask_token] # --> changes [MASK] to mask_token
+        mask_token_indices = [i for i, token in enumerate(tokenized_text) if token == "[MASK]"]
 
     # Create a copy of the original tokenized text
     replaced_text = tokenized_text.copy()
@@ -107,7 +102,7 @@ def mask_fill_replaced(input_sentences):
     # Evaluate the probability of each candidate word for each mask
     for mask_index, candidates in zip(mask_token_indices, candidates_list):
         # Find the candidate with the highest probability
-        best_candidate = max(candidates, key=lambda candidate: get_candidate_probability(candidate, mask_index, tokenized_text))
+        best_candidate = max(candidates, key=lambda candidate: get_candidate_probability(tokenizer.tokenize(candidate), mask_index, tokenized_text))
         # Replace the mask with the best candidate in the copied text
         replaced_text[mask_index] = best_candidate
 
@@ -118,6 +113,7 @@ def mask_fill_replaced(input_sentences):
 
     # Print the replaced sentence
     #print(f"{replaced_sentence}")
+
     return replaced_sentence
 
 '''
@@ -127,8 +123,11 @@ input_sentences = [
     "Pasensya heto lng ako, bubo sa pagaral",
     "Pasensya hito lng ako, bubo sa pagaral"
 ]
-modelInput=("GKLMIP/bert-tagalog-base-uncased")
+#modelInput=("GKLMIP/bert-tagalog-base-uncased")
+#modelInput=("GKLMIP/electra-tagalog-base-uncased")
+modelInput=("bert-base-uncased")
 setTokenModel(modelInput)
 show_mask_fill(input_sentences)
-print(f"\n{mask_fill_replaced(input_sentences)}")'''
+print(f"\n{mask_fill_replaced(input_sentences)}")
 
+'''
